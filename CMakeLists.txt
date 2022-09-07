@@ -26,10 +26,6 @@ add_executable(grblHAL
  tmc_uart.c
  eeprom/eeprom_24AAxxx.c
  eeprom/eeprom_24LC16B.c
- keypad/keypad.c
- sdcard/sdcard.c
- sdcard/ymodem.c
- bluetooth/hc_05.c
  motors/trinamic.c
  citoh_cx6000.c
 )
