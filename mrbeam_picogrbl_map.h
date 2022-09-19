@@ -23,7 +23,7 @@
 #error "Axis configuration is not supported!"
 #endif
 
-#define BOARD_NAME "BTT SKR Pico 1.0"
+#define BOARD_NAME "MRBEAM PICOGRBL 1.0"
 
 #undef TRINAMIC_ENABLE
 #undef TRINAMIC_UART_ENABLE

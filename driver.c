@@ -86,6 +86,10 @@
 #include "ioexpand.h"
 #endif
 
+#if TRINAMIC_ENABLE
+   #include "motors/trinamic.h"
+#endif
+
 #ifdef GPIO_PIO_1
     static uint x_step_sm;
     static uint y_step_sm;
