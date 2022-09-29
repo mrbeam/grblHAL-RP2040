@@ -30,8 +30,6 @@
 #define TRINAMIC_ENABLE 2209
 #define TRINAMIC_UART_ENABLE 1
 #define HAS_BOARD_INIT
-#define ESTOP_ENABLE  0
-
 
 // Define step pulse output pins.
 #define STEP_PORT                   GPIO_PIO_1 // Single pin PIO SM
@@ -48,18 +46,9 @@
 
 // Define stepper driver enable/disable output pin.
 #define ENABLE_PORT                 GPIO_OUTPUT
-#define X_ENABLE_PIN                12         
-#define Y_ENABLE_PIN                7          
+#define X_ENABLE_PIN                12
+#define Y_ENABLE_PIN                7
 #define Z_ENABLE_PIN                2
-
-/* M62 P(n) = on    M63 P(n) = off
-#define AUXOUTPUT0_PORT         GPIO_OUTPUT 
-#define AUXOUTPUT0_PIN          12 // X_En
-#define AUXOUTPUT1_PORT         GPIO_OUTPUT
-#define AUXOUTPUT1_PIN          7  // Y_En
-#define AUXOUTPUT2_PORT         GPIO_OUTPUT
-#define AUXOUTPUT2_PIN          2  // Z_En
-*/
 
 // Define ganged axis or A axis step pulse and step direction output pins.
 #if N_ABC_MOTORS > 0
@@ -77,9 +66,9 @@
 #define Z_LIMIT_PIN                 25
 
 // Define spindle enable and spindle direction output pins.
-//#define SPINDLE_PORT                GPIO_OUTPUT
-//#define SPINDLE_ENABLE_PIN          17
-//#define SPINDLE_DIRECTION_PIN       18
+#define SPINDLE_PORT                GPIO_OUTPUT
+#define SPINDLE_ENABLE_PIN          17
+#define SPINDLE_DIRECTION_PIN       18
 
 // Define spindle PWM output pin.
 #define SPINDLE_PWM_PORT            GPIO_OUTPUT
