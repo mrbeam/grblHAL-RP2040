@@ -19,6 +19,9 @@
   along with Grbl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef MRBEAM_PICOGRBL_MAP
+#define MRBEAM_PICOGRBL_MAP
+
 #if N_ABC_MOTORS > 1
 #error "Axis configuration is not supported!"
 #endif
@@ -107,3 +110,5 @@
 // Define probe switch input pin.
 #define PROBE_PORT                  GPIO_INPUT
 #define PROBE_PIN                   22
+
+#endif
