@@ -105,6 +105,7 @@ else()
     )
 endif()
 
+pico_set_linker_script(grblHAL ${CMAKE_CURRENT_SOURCE_DIR}/grblhal_noboot2.ld)
 pico_generate_pio_header(grblHAL ${CMAKE_CURRENT_LIST_DIR}/driverPIO.pio)
 
 if(PICO_BOARD STREQUAL "pico" OR PICO_BOARD STREQUAL "pico_w")
