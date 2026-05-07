@@ -63,7 +63,7 @@
 #define AUXOUTPUT1_PORT         GPIO_OUTPUT
 #define AUXOUTPUT1_PIN          26
 #define AUXOUTPUT2_PORT         GPIO_OUTPUT
-#define AUXOUTPUT2_PIN          27
+#define AUXOUTPUT2_PIN          18
 #endif
 #define AUXOUTPUT3_PORT         GPIO_OUTPUT // Spindle PWM
 #define AUXOUTPUT3_PIN          15
@@ -108,10 +108,10 @@
 // Define auxiliary I/O
 #define AUXINPUT0_PIN           22
 #define AUXINPUT1_PIN           21
-#define AUXINPUT2_PIN           28 // Probe
-#define AUXINPUT3_PIN           18 // Reset/EStop
-#define AUXINPUT4_PIN           19 // Feed hold
-#define AUXINPUT5_PIN           20 // Cycle start
+#define AUXINPUT2_PIN           19 // Probe
+#define AUXINPUT3_PIN           27 // Reset/EStop
+#define AUXINPUT4_PIN           28 // Feed hold
+#define AUXINPUT5_PIN           29 // Cycle start
 
 // Define user-control controls (cycle start, reset, feed hold) input pins.
 #if CONTROL_ENABLE & CONTROL_HALT
