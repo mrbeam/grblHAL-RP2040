@@ -1,3 +1,6 @@
+# Set the output ELF file name to grblhal_1.1f_<GRBL_BUILD_COMPILED>.elf
+set_target_properties(grblHAL PROPERTIES OUTPUT_NAME grblhal_1.1f_${GRBL_BUILD_COMPILED})
+
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
@@ -60,6 +63,25 @@ endif()
 project(grblHAL)
 pico_sdk_init()
 
+
+# Get current date
+execute_process(
+    COMMAND date "+%Y%m%d"
+    OUTPUT_VARIABLE BUILD_DATE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get git commit hash
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Combine into GRBL_BUILD_COMPILED
+set(GRBL_BUILD_COMPILED "${BUILD_DATE}_${GIT_COMMIT_HASH}")
+
 if(AddMyPlugin)
     add_executable(grblHAL
     main.c
@@ -111,6 +133,9 @@ endif()
 
 pico_set_linker_script(grblHAL ${CMAKE_CURRENT_SOURCE_DIR}/grblhal_noboot2.ld)
 pico_generate_pio_header(grblHAL ${CMAKE_CURRENT_LIST_DIR}/driverPIO.pio)
+
+# Pass combined value to the code
+target_compile_definitions(grblHAL PUBLIC GRBL_BUILD_COMPILED="${GRBL_BUILD_COMPILED}")
 
 if(PICO_BOARD STREQUAL "pico" OR PICO_BOARD STREQUAL "pico_w")
 target_compile_definitions(grblHAL PUBLIC RP_MCU=2040)
