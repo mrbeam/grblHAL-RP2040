@@ -1,6 +1,3 @@
-# Set the output ELF file name to grblhal_1.1f_<GRBL_BUILD_COMPILED>.elf
-set_target_properties(grblHAL PROPERTIES OUTPUT_NAME grblhal_1.1f_${GRBL_BUILD_COMPILED})
-
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
