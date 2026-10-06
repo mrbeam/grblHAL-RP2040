@@ -60,6 +60,25 @@ endif()
 project(grblHAL)
 pico_sdk_init()
 
+
+# Get current date
+execute_process(
+    COMMAND date "+%Y%m%d"
+    OUTPUT_VARIABLE BUILD_DATE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get git commit hash
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Combine into GRBL_BUILD_COMPILED
+set(GRBL_BUILD_COMPILED "${BUILD_DATE}_${GIT_COMMIT_HASH}")
+
 if(AddMyPlugin)
     add_executable(grblHAL
     main.c
@@ -111,7 +130,11 @@ else()
     )
 endif()
 
+pico_set_linker_script(grblHAL ${CMAKE_CURRENT_SOURCE_DIR}/grblhal_noboot2.ld)
 pico_generate_pio_header(grblHAL ${CMAKE_CURRENT_LIST_DIR}/driverPIO.pio)
+
+# Pass combined value to the code
+target_compile_definitions(grblHAL PUBLIC GRBL_BUILD_COMPILED="${GRBL_BUILD_COMPILED}")
 
 if(PICO_BOARD STREQUAL "pico" OR PICO_BOARD STREQUAL "pico_w")
 target_compile_definitions(grblHAL PUBLIC RP_MCU=2040)
@@ -214,6 +237,11 @@ if(ADD_HPGL)
 endif()
 
 target_include_directories(grblHAL PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
+# Apply machine overrides before grbl/config.h in every core and driver source.
+target_compile_options(grblHAL PRIVATE
+    "$<$<COMPILE_LANGUAGE:C,CXX>:-include${CMAKE_CURRENT_LIST_DIR}/my_machine.h>"
+)
 if(PICO_PLATFORM STREQUAL "rp2040" OR PICO_BOARD STREQUAL "pico" OR PICO_BOARD STREQUAL "pico_w")
 target_compile_definitions(grblHAL PUBLIC RP_MCU=2040)
 target_link_libraries(grblHAL PRIVATE
@@ -252,6 +280,7 @@ target_link_libraries(grblHAL PRIVATE
  hardware_pwm
  hardware_clocks
  hardware_flash
+ hardware_adc
 )
 
 pico_add_extra_outputs(grblHAL)

@@ -160,7 +160,9 @@
 #define CONTROL_ENABLE (CONTROL_HALT|CONTROL_FEED_HOLD|CONTROL_CYCLE_START)
 #endif
 
-#ifdef BOARD_CNC_BOOSTERPACK
+#if defined(BOARD_MRBEAM)
+  #include "boards/mrbeam_map.h"
+#elif defined(BOARD_CNC_BOOSTERPACK)
   #include "boards/cnc_boosterpack_map.h"
 #elif defined(BOARD_PICO_CNC)
   #include "boards/pico_cnc_map.h"
