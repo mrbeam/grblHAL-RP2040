@@ -61,26 +61,8 @@ project(grblHAL)
 pico_sdk_init()
 
 
-# Get current date
-execute_process(
-    COMMAND date "+%Y%m%d"
-    OUTPUT_VARIABLE BUILD_DATE
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-# Get git commit hash
-execute_process(
-    COMMAND git rev-parse --short HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-# Combine into GRBL_BUILD_COMPILED
-set(GRBL_BUILD_COMPILED "${BUILD_DATE}_${GIT_COMMIT_HASH}")
-
 if(AddMyPlugin)
-    add_executable(grblHAL
+    add_library(grblHAL_app STATIC
     main.c
     driver.c
     serial.c
@@ -105,7 +87,7 @@ if(AddMyPlugin)
     littlefs_hal.c
     )
 else()
-    add_executable(grblHAL
+    add_library(grblHAL_app STATIC
     main.c
     driver.c
     serial.c
@@ -130,44 +112,43 @@ else()
     )
 endif()
 
-pico_set_linker_script(grblHAL ${CMAKE_CURRENT_SOURCE_DIR}/grblhal_noboot2.ld)
-pico_generate_pio_header(grblHAL ${CMAKE_CURRENT_LIST_DIR}/driverPIO.pio)
+pico_generate_pio_header(grblHAL_app ${CMAKE_CURRENT_LIST_DIR}/driverPIO.pio)
 
 # Pass combined value to the code
-target_compile_definitions(grblHAL PUBLIC GRBL_BUILD_COMPILED="${GRBL_BUILD_COMPILED}")
+grbl_generate_version(grblHAL_app "${CMAKE_CURRENT_LIST_DIR}" GRBL_RP2040_VERSION GRBL_RP2040_VERSION_OVERRIDE)
 
 if(PICO_BOARD STREQUAL "pico" OR PICO_BOARD STREQUAL "pico_w")
-target_compile_definitions(grblHAL PUBLIC RP_MCU=2040)
+target_compile_definitions(grblHAL_app PUBLIC RP_MCU=2040)
 if(PICO_SDK_VERSION_STRING VERSION_GREATER_EQUAL "2.1.1")
-target_compile_definitions(grblHAL PUBLIC PICO_USE_FASTEST_SUPPORTED_CLOCK=1)
+target_compile_definitions(grblHAL_app PUBLIC PICO_USE_FASTEST_SUPPORTED_CLOCK=1)
 endif()
 else()
-target_compile_definitions(grblHAL PUBLIC RP_MCU=2350)
+target_compile_definitions(grblHAL_app PUBLIC RP_MCU=2350)
 endif()
-target_compile_definitions(grblHAL PUBLIC RP2040)
-target_compile_definitions(grblHAL PUBLIC NEW_FATFS)
-#target_compile_definitions(grblHAL PUBLIC LITTLEFS_ENABLE=1)
+target_compile_definitions(grblHAL_app PUBLIC RP2040)
+target_compile_definitions(grblHAL_app PUBLIC NEW_FATFS)
+#target_compile_definitions(grblHAL_app PUBLIC LITTLEFS_ENABLE=1)
 
 if(ADD_WIFI)
-    target_compile_definitions(grblHAL PUBLIC WIFI_ENABLE=1)
-    target_compile_definitions(grblHAL PUBLIC NDEBUG)
-    target_sources(grblHAL PRIVATE
+    target_compile_definitions(grblHAL_app PUBLIC WIFI_ENABLE=1)
+    target_compile_definitions(grblHAL_app PUBLIC NDEBUG)
+    target_sources(grblHAL_app PRIVATE
      wifi.c
     )
-    target_link_libraries(grblHAL PRIVATE
+    target_link_libraries(grblHAL_app PRIVATE
      pico_cyw43_arch_lwip_poll
     )
 endif()
 
 if(ADD_ETHERNET)
-    target_compile_definitions(grblHAL PUBLIC ETHERNET_ENABLE=1)
-    target_compile_definitions(grblHAL PUBLIC CYW43_LWIP=0)
-    target_compile_definitions(grblHAL PUBLIC LWIP_NOASSERT)
+    target_compile_definitions(grblHAL_app PUBLIC ETHERNET_ENABLE=1)
+    target_compile_definitions(grblHAL_app PUBLIC CYW43_LWIP=0)
+    target_compile_definitions(grblHAL_app PUBLIC LWIP_NOASSERT)
     include(networking/wiznet/CMakeLists.txt)
-    target_sources(grblHAL PRIVATE
+    target_sources(grblHAL_app PRIVATE
      w5x00_ll_driver.c
     )
-    target_link_libraries(grblHAL PRIVATE
+    target_link_libraries(grblHAL_app PRIVATE
      wiznet
      pico_lwip
      pico_lwip_nosys
@@ -175,83 +156,83 @@ if(ADD_ETHERNET)
 endif()
 
 if(ADD_WIFI OR ADD_ETHERNET)
-    target_compile_definitions(grblHAL PUBLIC WEBUI_AUTO_REPORT_INTERVAL=0)
+    target_compile_definitions(grblHAL_app PUBLIC WEBUI_AUTO_REPORT_INTERVAL=0)
     if(ADD_mDNS)
-        target_compile_definitions(grblHAL PUBLIC LWIP_IGMP=1)
-        target_compile_definitions(grblHAL PUBLIC LWIP_NUM_NETIF_CLIENT_DATA=1)
-        target_compile_definitions(grblHAL PUBLIC LWIP_MDNS_RESPONDER=1)
-        target_compile_definitions(grblHAL PUBLIC MDNS_MAX_SERVICES=8)
-        target_compile_definitions(grblHAL PUBLIC MDNS_ENABLE=1)
-        target_sources(grblHAL PRIVATE
+        target_compile_definitions(grblHAL_app PUBLIC LWIP_IGMP=1)
+        target_compile_definitions(grblHAL_app PUBLIC LWIP_NUM_NETIF_CLIENT_DATA=1)
+        target_compile_definitions(grblHAL_app PUBLIC LWIP_MDNS_RESPONDER=1)
+        target_compile_definitions(grblHAL_app PUBLIC MDNS_MAX_SERVICES=8)
+        target_compile_definitions(grblHAL_app PUBLIC MDNS_ENABLE=1)
+        target_sources(grblHAL_app PRIVATE
          ${lwipmdns_SRCS}
         )
     endif()
     if(ADD_MQTT)
-        target_compile_definitions(grblHAL PUBLIC MQTT_ENABLE=1)
-        target_sources(grblHAL PRIVATE
+        target_compile_definitions(grblHAL_app PUBLIC MQTT_ENABLE=1)
+        target_sources(grblHAL_app PRIVATE
          ${lwipmqtt_SRCS}
         )
-        target_link_libraries(grblHAL PRIVATE
+        target_link_libraries(grblHAL_app PRIVATE
             pico_lwip_mqtt
         )
     endif()
-    target_link_libraries(grblHAL PRIVATE
+    target_link_libraries(grblHAL_app PRIVATE
      networking
      webui
     )
 endif()
 
 if(ADD_BLUETOOTH)
-    target_compile_definitions(grblHAL PUBLIC BLUETOOTH_ENABLE=1)
-    target_compile_definitions(grblHAL PUBLIC NDEBUG)
-    target_sources(grblHAL PRIVATE
+    target_compile_definitions(grblHAL_app PUBLIC BLUETOOTH_ENABLE=1)
+    target_compile_definitions(grblHAL_app PUBLIC NDEBUG)
+    target_sources(grblHAL_app PRIVATE
      bt_native.c
     )
-    target_include_directories(grblHAL PRIVATE ${PICO_SDK_PATH}/lib/btstack/src)
-    target_link_libraries(grblHAL PRIVATE
+    target_include_directories(grblHAL_app PRIVATE ${PICO_SDK_PATH}/lib/btstack/src)
+    target_link_libraries(grblHAL_app PRIVATE
      pico_btstack_classic
      pico_btstack_ble
      pico_btstack_cyw43
     )
     if(NOT ADD_WIFI)
-        target_compile_definitions(grblHAL PUBLIC CYW43_LWIP=0)
-        target_link_libraries(grblHAL PRIVATE
+        target_compile_definitions(grblHAL_app PUBLIC CYW43_LWIP=0)
+        target_link_libraries(grblHAL_app PRIVATE
          pico_cyw43_arch_poll
         )
     endif()
 endif()
 
 if(AddMyPlugin)
-    target_sources(grblHAL PRIVATE
+    target_sources(grblHAL_app PRIVATE
      my_plugin.c
     )
 endif()
 
 if(ADD_HPGL)
-    target_sources(grblHAL PRIVATE
+    target_sources(grblHAL_app PRIVATE
      boards/citoh_cx6000.c
     )
-    target_link_libraries(grblHAL PRIVATE
+    target_link_libraries(grblHAL_app PRIVATE
      hpgl
     )
 endif()
 
-target_include_directories(grblHAL PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(grblHAL_app PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 # Apply machine overrides before grbl/config.h in every core and driver source.
-target_compile_options(grblHAL PRIVATE
+target_compile_options(grblHAL_app PUBLIC
     "$<$<COMPILE_LANGUAGE:C,CXX>:-include${CMAKE_CURRENT_LIST_DIR}/my_machine.h>"
 )
 if(PICO_PLATFORM STREQUAL "rp2040" OR PICO_BOARD STREQUAL "pico" OR PICO_BOARD STREQUAL "pico_w")
-target_compile_definitions(grblHAL PUBLIC RP_MCU=2040)
-target_link_libraries(grblHAL PRIVATE
+target_compile_definitions(grblHAL_app PUBLIC RP_MCU=2040)
+target_link_libraries(grblHAL_app PRIVATE
  hardware_rtc
 )
 else()
-target_compile_definitions(grblHAL PUBLIC RP_MCU=2350)
+target_compile_definitions(grblHAL_app PUBLIC RP_MCU=2350)
 endif()
 
-target_link_libraries(grblHAL PRIVATE
+target_link_libraries(grblHAL_app PRIVATE
  grbl
  fatfs
  sdcard
@@ -283,7 +264,37 @@ target_link_libraries(grblHAL PRIVATE
  hardware_adc
 )
 
-pico_add_extra_outputs(grblHAL)
+# Compile application sources once and link independent UART and factory images.
+get_target_property(MRBEAM_APP_LIBRARIES grblHAL_app LINK_LIBRARIES)
+add_executable(grblHAL)
+target_link_libraries(grblHAL PRIVATE grblHAL_app ${MRBEAM_APP_LIBRARIES})
+option(MRBEAM_FACTORY_IMAGE "Build bootloader + MrblHAL factory UF2" ON)
+if(MRBEAM_FACTORY_IMAGE)
+    if(NOT PICO_PLATFORM STREQUAL "rp2040")
+        message(FATAL_ERROR "Mr Beam serial bootloader requires RP2040")
+    endif()
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bootloader/main.c")
+        message(FATAL_ERROR "Initialize bootloader: git submodule update --init bootloader")
+    endif()
+    add_subdirectory(bootloader)
+    bootloader_build_standalone(grblHAL)
+    add_executable(mrblhal_factory)
+    target_link_libraries(mrblhal_factory PRIVATE grblHAL_app ${MRBEAM_APP_LIBRARIES})
+    bootloader_build_combined(mrblhal_factory)
+    # Stable public filenames for the header-patched factory artifacts.
+    add_custom_command(OUTPUT grblhal-factory.uf2 grblhal-factory.bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            mrblhal_factory_combined.uf2 grblhal-factory.uf2
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            mrblhal_factory_combined.bin grblhal-factory.bin
+        DEPENDS mrblhal_factory_combined
+            mrblhal_factory_combined.uf2 mrblhal_factory_combined.bin VERBATIM)
+    add_custom_target(mrblhal_factory_image ALL
+        DEPENDS grblhal-factory.uf2 grblhal-factory.bin)
+else()
+    pico_set_linker_script(grblHAL ${CMAKE_CURRENT_SOURCE_DIR}/grblhal_noboot2.ld)
+    pico_add_bin_output(grblHAL)
+endif()
 
 unset(PICO_BOARD CACHE)
 unset(ADD_WIFI CACHE)
