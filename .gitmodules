@@ -43,3 +43,6 @@
 [submodule "plasma"]
 	path = plasma
 	url = https://github.com/grblHAL/Plugin_plasma/
+[submodule "bootloader"]
+	path = bootloader
+	url = https://github.com/mrbeam/RP2040-serial-bootloader.git
