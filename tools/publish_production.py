@@ -49,6 +49,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--header", type=Path, required=True)
     parser.add_argument("--core-header", type=Path, required=True)
+    parser.add_argument("--machine-header", type=Path, required=True)
     parser.add_argument("--elf", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--factory", type=Path)
@@ -62,9 +63,14 @@ def main():
         if not re.fullmatch(r"[0-9]{8}", creation_date) or compiled_version != version:
             raise ValueError("Build date/version does not match the compiled version")
         protocol = macro(args.core_header, "GRBL_VERSION")
-        publish(args.elf, args.output_dir / f"grblHAL_{protocol}_{creation_date}_{version}.elf")
+        baud_match = re.search(r"^#define\s+BAUD_RATE\s+(\d+)\b",
+                               args.machine_header.read_text(), re.MULTILINE)
+        if not baud_match or int(baud_match[1]) <= 0:
+            raise ValueError("Missing or invalid BAUD_RATE in machine header")
+        baudrate = baud_match[1]
+        publish(args.elf, args.output_dir / f"grblHAL_{protocol}_{creation_date}_{version}_{baudrate}.elf")
         if args.factory:
-            publish(args.factory, args.output_dir / f"grblhal-{version}-factory.uf2")
+            publish(args.factory, args.output_dir / f"grblHAL-factory-{version}.uf2")
         if args.bootloader:
             if not args.bootloader_header:
                 raise ValueError("Bootloader header is required")

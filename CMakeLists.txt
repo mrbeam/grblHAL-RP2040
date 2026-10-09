@@ -302,6 +302,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(MRBEAM_PRODUCTION_ARGS
     --header "${CMAKE_CURRENT_BINARY_DIR}/GRBL_RP2040_VERSION.h"
     --core-header "${CMAKE_CURRENT_SOURCE_DIR}/grbl/grbl.h"
+    --machine-header "${CMAKE_CURRENT_SOURCE_DIR}/my_machine.h"
     --elf "$<TARGET_FILE:grblHAL>"
     --output-dir "${CMAKE_CURRENT_BINARY_DIR}/production")
 set(MRBEAM_PRODUCTION_DEPENDENCIES grblHAL)

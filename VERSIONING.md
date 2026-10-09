@@ -47,10 +47,11 @@ update versions must use the new complete welcome version when publishing firmwa
 `production/` inside whichever build directory you use):
 
 - `bootloader-<bootloader-version>.uf2`
-- `grblhal-<rp2040-version>-factory.uf2`
-- `grblHAL_1.1f_<YYYYMMDD>_<rp2040-version>.elf`
+- `grblHAL-factory-<rp2040-version>.uf2`
+- `grblHAL_1.1f_<YYYYMMDD>_<rp2040-version>_<baudrate>.elf`
 
-The date and versions come from the headers used in the build. Original build
+The date and versions come from the headers used in the build. The ELF baud-rate
+suffix comes from `BAUD_RATE` in `my_machine.h` (currently `250000`). Original build
 artifacts remain available. Older production files are retained. With
 `MRBEAM_FACTORY_IMAGE=OFF`, only the application ELF is copied.
 
