@@ -40,3 +40,21 @@ These overrides bypass Git state detection and should describe the actual source
 Normal checkout builds need only `cmake ..` and `make -j16`. Python 3 is required;
 no third-party Python packages are used. Plugin firmware filenames and expected
 update versions must use the new complete welcome version when publishing firmware.
+
+## Production artifacts
+
+`make -j16` also copies completed images into `build/production/` (or
+`production/` inside whichever build directory you use):
+
+- `bootloader-<bootloader-version>.uf2`
+- `grblhal-<rp2040-version>-factory.uf2`
+- `grblHAL_1.1f_<YYYYMMDD>_<rp2040-version>.elf`
+
+The date and versions come from the headers used in the build. Original build
+artifacts remain available. Older production files are retained. With
+`MRBEAM_FACTORY_IMAGE=OFF`, only the application ELF is copied.
+
+The production folder also contains `SHA256SUMS` and `MD5SUMS`. These sorted
+manifests cover every `.elf` and `.uf2` file in that folder, including retained
+older builds, and are refreshed after publishing. Verify them from the folder
+with `sha256sum -c SHA256SUMS` and `md5sum -c MD5SUMS`.

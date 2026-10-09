@@ -278,23 +278,46 @@ if(MRBEAM_FACTORY_IMAGE)
     endif()
     add_subdirectory(bootloader)
     bootloader_build_standalone(grblHAL)
-    add_executable(mrblhal_factory)
-    target_link_libraries(mrblhal_factory PRIVATE grblHAL_app ${MRBEAM_APP_LIBRARIES})
-    bootloader_build_combined(mrblhal_factory)
+    add_executable(grblhal_factory)
+    target_link_libraries(grblhal_factory PRIVATE grblHAL_app ${MRBEAM_APP_LIBRARIES})
+    bootloader_build_combined(grblhal_factory)
     # Stable public filenames for the header-patched factory artifacts.
     add_custom_command(OUTPUT grblhal-factory.uf2 grblhal-factory.bin
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            mrblhal_factory_combined.uf2 grblhal-factory.uf2
+            grblhal_factory_combined.uf2 grblhal-factory.uf2
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            mrblhal_factory_combined.bin grblhal-factory.bin
-        DEPENDS mrblhal_factory_combined
-            mrblhal_factory_combined.uf2 mrblhal_factory_combined.bin VERBATIM)
-    add_custom_target(mrblhal_factory_image ALL
+            grblhal_factory_combined.bin grblhal-factory.bin
+        DEPENDS grblhal_factory_combined
+            grblhal_factory_combined.uf2 grblhal_factory_combined.bin VERBATIM)
+    add_custom_target(grblhal_factory_image ALL
         DEPENDS grblhal-factory.uf2 grblhal-factory.bin)
 else()
     pico_set_linker_script(grblHAL ${CMAKE_CURRENT_SOURCE_DIR}/grblhal_noboot2.ld)
     pico_add_bin_output(grblHAL)
 endif()
+
+
+# Publish only completed images, using their generated compile-time versions.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(MRBEAM_PRODUCTION_ARGS
+    --header "${CMAKE_CURRENT_BINARY_DIR}/GRBL_RP2040_VERSION.h"
+    --core-header "${CMAKE_CURRENT_SOURCE_DIR}/grbl/grbl.h"
+    --elf "$<TARGET_FILE:grblHAL>"
+    --output-dir "${CMAKE_CURRENT_BINARY_DIR}/production")
+set(MRBEAM_PRODUCTION_DEPENDENCIES grblHAL)
+if(MRBEAM_FACTORY_IMAGE)
+    list(APPEND MRBEAM_PRODUCTION_ARGS
+        --factory "${CMAKE_CURRENT_BINARY_DIR}/grblhal-factory.uf2"
+        --bootloader "${CMAKE_CURRENT_BINARY_DIR}/bootloader/bootloader.uf2"
+        --bootloader-header "${CMAKE_CURRENT_BINARY_DIR}/bootloader/bl_version_generated.h")
+    list(APPEND MRBEAM_PRODUCTION_DEPENDENCIES grblhal_factory_image bootloader_release_uf2)
+endif()
+add_custom_target(production ALL
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/publish_production.py"
+        ${MRBEAM_PRODUCTION_ARGS}
+    DEPENDS ${MRBEAM_PRODUCTION_DEPENDENCIES}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/publish_production.py"
+    VERBATIM)
 
 unset(PICO_BOARD CACHE)
 unset(ADD_WIFI CACHE)
